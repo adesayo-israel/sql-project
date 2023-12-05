@@ -51,4 +51,10 @@ VALUES
     (2, 'Cheesy Cheeseria', '45 Brie Avenue, Stilton, Merseyside, UK', 'Cheesy.Cheese@Rockfort.co.uk', '0151 339 0232'),
     (3, 'Carrot Top', '626 Legume Road, Brussels, Belgium', NULL, NULL);
 
+INSERT INTO Customers (CustomerID, Name, Address, Email, Mobile)
+VALUES
+	(1, 'Eric Wimp', '29, Acacia Road, Nutty town', 'BananaMad@Dandy.com', '07845 263 374'),
+	(2, 'William Benn', '52 Festive Road, London', 'MrBenn@fancydress.com', '07326 629 551'),
+	(3,	'Dougal Dog', '36 Magic Garden, Magic Roundabout', 'Dougal@Magic.com', '05638 384 938');
+
 -- Insert data into other tables similarly..
