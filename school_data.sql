@@ -1090,3 +1090,27 @@ JOIN tblEnrolments e ON s.StudentNo = e.StudentNo
 JOIN tblCourses c ON s.CourseCode = c.CourseCode
 WHERE (e.AssessGrade + e.ExamGrade) / 2 < 40
 GROUP BY c.CourseName;
+
+--provides a list of students, 
+--their course name, 
+--their final award, 
+--module titles and module tutor, 
+--but limit search to those tutors whose name starts with ‘Stu’
+SELECT 
+    s.Forenames + ' ' + s.Surname AS FullName,
+    c.CourseName,
+    (e.AssessGrade + e.ExamGrade) / 2 AS FinalAward,
+    m.Title AS ModuleTitle,
+    m.Tutor AS ModuleTutor
+FROM 
+    tblStudents s
+JOIN 
+    tblEnrolments e ON s.StudentNo = e.StudentNo
+JOIN 
+    tblCourses c ON s.CourseCode = c.CourseCode
+JOIN 
+    tblModules m ON e.GroupNo = m.GroupNo
+WHERE 
+    m.Tutor LIKE 'Stu%'
+ORDER BY 
+    FullName, CourseName, ModuleTitle;
