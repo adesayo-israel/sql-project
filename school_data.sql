@@ -973,34 +973,120 @@ INSERT INTO tblEnrolments VALUES (93223, '301A', 51, 58)
 INSERT INTO tblEnrolments VALUES (93223, '306C', 6, 77) 
 INSERT INTO tblEnrolments VALUES (93223, '314A', 95, 54) 
 
-
--- Alter Students table to add StudentNo as primary key
+--Question 1
+--To add the primary and foreign keys to the tables we give the following commands.
 ALTER TABLE tblStudents
 ADD CONSTRAINT PK_StudentNo PRIMARY KEY (StudentNo);
 
--- Alter Courses table to add CourseCode as primary key
 ALTER TABLE tblCourses
 ADD CONSTRAINT PK_CourseCode PRIMARY KEY (CourseCode);
 
--- Alter Modules table to add GroupNo as primary key
 ALTER TABLE tblModules
 ADD CONSTRAINT PK_GroupNo PRIMARY KEY (GroupNo);
 
--- Alter Enrolments table to add EnrolmentID as primary key
 ALTER TABLE tblEnrolments
-ADD EnrolmentID INT IDENTITY(1,1) PRIMARY KEY; -- Adding EnrolmentID as a primary key with auto-increment
+ADD EnrolmentID INT IDENTITY(1,1) PRIMARY KEY; 
 
-
--- Add foreign key constraint for CourseCode in tblStudents referencing tblCourses
 ALTER TABLE tblStudents
 ADD CONSTRAINT FK_CourseCode FOREIGN KEY (CourseCode) REFERENCES tblCourses(CourseCode);
 
--- Add foreign key constraint for StudentNo in tblEnrolments referencing tblStudents
 ALTER TABLE tblEnrolments
 ADD CONSTRAINT FK_StudentNo FOREIGN KEY (StudentNo) REFERENCES tblStudents(StudentNo);
 
--- Add foreign key constraint for GroupNo in tblEnrolments referencing tblModules
 ALTER TABLE tblEnrolments
 ADD CONSTRAINT FK_GroupNo FOREIGN KEY (GroupNo) REFERENCES tblModules(GroupNo);
 
+--Question 2
+-- From the single table queries 
+-- To display all the students from the tblStudents table (assuming there are 1000 students)
+SELECT TOP (1000) [StudentNo]
+      ,[Surname]
+      ,[Forenames]
+      ,[CourseCode]
+      ,[PAT]
+  FROM [Assign].[dbo].[tblStudents]
 
+  --b.	Ordering the list of students by Surname
+  SELECT * FROM tblStudents ORDER BY Surname;
+
+  --c.	Selecting only students with the CourseCode `PER’
+  SELECT * FROM tblStudents WHERE CourseCode = 'PER';
+  
+  --d.	How many students are on the course with CourseCode `LEI’.
+  SELECT COUNT(*) AS NumberOfStudents FROM tblStudents WHERE CourseCode = 'LEI';
+
+  --e.	Average assessGrade and average examGrade for all students.
+  SELECT AVG(AssessGrade) AS AvgAssessGrade, AVG(ExamGrade) AS AvgExamGrade FROM tblEnrolments;
+
+  --f. list all students by FullName and their AssessGrade, order by highest AssessGrade.
+  SELECT tblStudents.Forenames + ' ' + tblStudents.Surname AS FullName, tblEnrolments.AssessGrade 
+FROM tblStudents 
+JOIN tblEnrolments ON tblStudents.StudentNo = tblEnrolments.StudentNo
+ORDER BY tblEnrolments.AssessGrade DESC;
+
+--Question 3 
+--Database altering queries
+--a.	Create a copy of tblStudents called tblStudents_copy
+SELECT * INTO tblStudents_copy FROM tblStudents;
+
+--b.	Student 93120 was entered as `Sara L’ when it should have been `Sarah L’, amend this record in tblStudents_copy.
+SELECT * FROM tblStudents_copy;
+UPDATE tblStudents_copy 
+SET Forenames = 'Sarah'
+WHERE StudentNo = 93120;
+
+
+--c.	Add a column to tblStudents_copy called FullName.
+ALTER TABLE tblStudents_copy
+ADD FullName nvarchar(50);
+
+--d.	Populate this column with the student’s forenames and surname combined. 
+UPDATE tblStudents_copy 
+SET FullName = Forenames + ' ' + Surname;
+
+--e.	Delete the columns firstname and surname from the copy table.
+ALTER TABLE tblStudents_copy
+DROP COLUMN Forenames, Surname;
+
+--Question 4
+--evaluation of student performance across different courses
+SELECT 
+    c.CourseCode,
+    c.CourseName,
+    MIN((e.AssessGrade + e.ExamGrade) / 2) AS MinPerformance,
+    MAX((e.AssessGrade + e.ExamGrade) / 2) AS MaxPerformance,
+    AVG((e.AssessGrade + e.ExamGrade) / 2) AS AvgPerformance
+FROM tblCourses c
+JOIN tblStudents_copy s ON c.CourseCode = s.CourseCode
+JOIN tblEnrolments e ON s.StudentNo = e.StudentNo
+GROUP BY c.CourseCode, c.CourseName;
+
+
+--Question 5
+--a. average examGrade and assessGrade by groupNo
+SELECT GroupNo, 
+       AVG(ExamGrade) AS AvgExamGrade, 
+       AVG(AssessGrade) AS AvgAssessGrade 
+FROM tblEnrolments 
+GROUP BY GroupNo;
+
+--b. groupNo that have an average examGrade of less than 40
+SELECT GroupNo
+FROM tblEnrolments
+GROUP BY GroupNo
+HAVING AVG(ExamGrade) < 40;
+
+--c. list of full names of all students and their courses where their module’s final grade 
+SELECT s.Forenames + ' ' + s.Surname AS FullName, c.CourseName
+FROM tblStudents s
+JOIN tblEnrolments e ON s.StudentNo = e.StudentNo
+JOIN tblCourses c ON s.CourseCode = c.CourseCode
+WHERE (e.AssessGrade + e.ExamGrade) / 2 < 40;
+
+--d. students have failed in each course.  
+SELECT c.CourseName, COUNT(*) AS NumberOfFailures
+FROM tblStudents s
+JOIN tblEnrolments e ON s.StudentNo = e.StudentNo
+JOIN tblCourses c ON s.CourseCode = c.CourseCode
+WHERE (e.AssessGrade + e.ExamGrade) / 2 < 40
+GROUP BY c.CourseName;
